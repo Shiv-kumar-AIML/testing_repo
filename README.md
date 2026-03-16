@@ -8,6 +8,7 @@ This project is a terminal chatbot built with:
 - SQLite database for persistent chat history
 - SQL query tool for database interactions
 - Web scraping tool for extracting page content
+- Voice assistance tools for speech input/output
 
 ## 1) Prerequisites
 
@@ -60,5 +61,6 @@ python chatbot.py
 - Chat history is persisted in `chatbot.db` (SQLite) across runs.
 - SQL query tool allows read-only queries on the database (e.g., view chat history).
 - Web scraping tool extracts text content from URLs for analysis.
+- Voice tools: `voice_input_tool` for speech-to-text, `voice_output_tool` for text-to-speech.
 - Type `exit` or `quit` to stop.
 # testing_repo

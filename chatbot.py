@@ -15,6 +15,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from web_scraper import web_scrape_tool
+from voice_assistant import voice_input_tool, voice_output_tool
 
 
 class ChatState(TypedDict):
@@ -53,7 +54,7 @@ def build_graph(model_name: str, base_url: str):
             "latest updates, or web facts."
         ),
     )
-    tools = [search_tool, sql_query_tool, web_scrape_tool]
+    tools = [search_tool, sql_query_tool, web_scrape_tool, voice_input_tool, voice_output_tool]
     llm_with_tools = llm.bind_tools(tools)
 
     def assistant_node(state: ChatState):
