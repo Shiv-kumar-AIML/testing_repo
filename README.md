@@ -3,7 +3,10 @@
 This project is a terminal chatbot built with:
 - `langgraph`
 - `langchain-ollama`
+- `langchain-community` (web search tool)
 - Ollama model: `mistral:latest`
+- SQLite database for persistent chat history
+- SQL query tool for database interactions
 
 ## 1) Prerequisites
 
@@ -52,5 +55,8 @@ python chatbot.py
 ## Notes
 
 - Conversation memory is kept during the current run using LangGraph's in-memory checkpointing.
+- Web search is enabled using DuckDuckGo. The assistant can call search when your prompt needs recent or factual internet info.
+- Chat history is persisted in `chatbot.db` (SQLite) across runs.
+- SQL query tool allows read-only queries on the database (e.g., view chat history).
 - Type `exit` or `quit` to stop.
 # testing_repo
