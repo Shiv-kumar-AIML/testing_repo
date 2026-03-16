@@ -41,6 +41,20 @@ class VoiceAssistant:
         self.engine.say(text)
         self.engine.runAndWait()
 
+    def random_fun_fact(self) -> str:
+        """Speak a random fun fact."""
+        import random
+        fun_facts = [
+            "Did you know that honey never spoils?",
+            "Octopuses have three hearts.",
+            "A group of flamingos is called a flamboyance.",
+            "Bananas are berries, but strawberries aren't.",
+            "The shortest war in history lasted only 38-45 minutes."
+        ]
+        fact = random.choice(fun_facts)
+        self.speak(fact)
+        return f"Spoke random fact: {fact}"
+
 
 # Global instance
 voice = VoiceAssistant()
@@ -68,3 +82,13 @@ def voice_output_tool(text: str) -> str:
     """
     voice.speak(text)
     return f"Spoken: {text}"
+
+
+@tool
+def random_fun_fact_tool() -> str:
+    """Speak a random fun fact aloud.
+
+    Returns:
+        Confirmation message.
+    """
+    return voice.random_fun_fact()

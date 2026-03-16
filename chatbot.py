@@ -99,16 +99,14 @@ def main() -> None:
         # Handle special commands
         if user_input.startswith('/'):
             if user_input == '/help':
-                print("Commands: /help, /clear, /history, /exit")
+                print("Commands: /help, /stats, /history, /exit")
                 continue
-            elif user_input == '/clear':
-                db.execute_query("DELETE FROM messages WHERE conversation_id = (SELECT id FROM conversations WHERE thread_id = ?)", (thread_id,))
-                initial_state["messages"] = []
-                print("Chat history cleared.")
+            elif user_input == '/stats':
+                msg_count = len(initial_state["messages"])
+                print(f"Messages in current session: {msg_count}")
                 continue
             elif user_input == '/history':
-                history = db.load_messages(thread_id)
-                for role, content in history[-10:]:  # Last 10 messages
+                for role, content in initial_state["messages"][-10:]:  # Last 10 messages
                     print(f"{role.capitalize()}: {content}")
                 continue
             elif user_input in {'/exit', '/quit'}:
