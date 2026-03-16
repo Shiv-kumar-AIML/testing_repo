@@ -7,6 +7,7 @@ This project is a terminal chatbot built with:
 - Ollama model: `mistral:latest`
 - SQLite database for persistent chat history
 - SQL query tool for database interactions
+- Web scraping tool for extracting page content
 
 ## 1) Prerequisites
 
@@ -58,5 +59,6 @@ python chatbot.py
 - Web search is enabled using DuckDuckGo. The assistant can call search when your prompt needs recent or factual internet info.
 - Chat history is persisted in `chatbot.db` (SQLite) across runs.
 - SQL query tool allows read-only queries on the database (e.g., view chat history).
+- Web scraping tool extracts text content from URLs for analysis.
 - Type `exit` or `quit` to stop.
 # testing_repo
