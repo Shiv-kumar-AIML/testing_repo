@@ -70,15 +70,23 @@ class ChatDatabase:
             """, (thread_id,))
             return cursor.fetchall()
 
-    def execute_query(self, query: str) -> List[Tuple]:
-        """Execute a read-only SQL query on the database."""
-        # For safety, only allow SELECT queries
-        if not query.strip().upper().startswith("SELECT"):
-            raise ValueError("Only SELECT queries are allowed for security.")
+    def execute_query(self, query: str, params: tuple = ()) -> List[Tuple]:
+        """Execute a read-only SQL query on the database, or safe DELETE on messages."""
+        query_upper = query.strip().upper()
+        if query_upper.startswith("SELECT"):
+            pass  # Allow
+        elif query_upper.startswith("DELETE FROM messages"):
+            pass  # Allow safe delete
+        else:
+            raise ValueError("Only SELECT or DELETE FROM messages queries are allowed for security.")
 
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute(query)
-            return cursor.fetchall()
+            cursor = conn.execute(query, params)
+            if query_upper.startswith("SELECT"):
+                return cursor.fetchall()
+            else:
+                conn.commit()
+                return []  # For DELETE, return empty
 
 
 # Global instance

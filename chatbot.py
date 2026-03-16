@@ -96,6 +96,28 @@ def main() -> None:
         if not user_input:
             continue
 
+        # Handle special commands
+        if user_input.startswith('/'):
+            if user_input == '/help':
+                print("Commands: /help, /clear, /history, /exit")
+                continue
+            elif user_input == '/clear':
+                db.execute_query("DELETE FROM messages WHERE conversation_id = (SELECT id FROM conversations WHERE thread_id = ?)", (thread_id,))
+                initial_state["messages"] = []
+                print("Chat history cleared.")
+                continue
+            elif user_input == '/history':
+                history = db.load_messages(thread_id)
+                for role, content in history[-10:]:  # Last 10 messages
+                    print(f"{role.capitalize()}: {content}")
+                continue
+            elif user_input in {'/exit', '/quit'}:
+                print("Assistant: Bye!")
+                break
+            else:
+                print("Unknown command. Type /help for commands.")
+                continue
+
         if user_input.lower() in {"exit", "quit"}:
             print("Assistant: Bye!")
             break
