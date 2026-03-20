@@ -12,3 +12,11 @@ def run_command(user_input):
     # Command injection vulnerability  
     os.system(f"echo {user_input}")
 
+
+def unsafe_eval(user_input):
+    # Code injection vulnerability
+    return eval(user_input)
+
+def read_file(filename):
+    # Path traversal vulnerability
+    return open(f"/data/{filename}").read()
