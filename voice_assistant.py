@@ -58,6 +58,12 @@ class VoiceAssistant:
         self.speak(fact)
         return f"Spoke random fact: {fact}"
 
+    def greet_user(self, name: str = "User") -> str:
+        """Greet the user with a personalized message."""
+        greeting = f"Hello {name}, how can I help you today?"
+        self.speak(greeting)
+        return f"Greeted: {greeting}"
+
 
 # Global instance
 voice = VoiceAssistant()
