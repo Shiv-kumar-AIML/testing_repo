@@ -13,6 +13,9 @@ class VoiceAssistant:
         self.engine = pyttsx3.init()
         # Configure voice settings
         voices = self.engine.getProperty('voices')
+        
+        print("shiv")
+        print("shiv")
         if voices:
             self.engine.setProperty('voice', voices[0].id)  # Use first available voice
         self.engine.setProperty('rate', 180)  # Speed of speech

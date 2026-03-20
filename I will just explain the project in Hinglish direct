@@ -1,0 +1,117 @@
+I will just explain the project in Hinglish directly without a task boundary.
+
+Bhai, yeh project ek Autonomous Security AI Agent hai, jo codepadh kar security vulnerabilities find karta hai, verify karta hai, aur unko fix bhi karta hai. Isko aise banaya gaya hai ki LLM ka karcha (tokens) kam ho aur accuracy maximum ho.
+
+Yeh total 2 main parts mein divided hai:
+
+Parser & Pre-Analysis (Deterministic / Bina AI ke)
+5-Phase Agent Pipeline (AI se powered)
+Chalo step-by-step samajhte hain pura flow 
+
+main.py
+ start hone se lekar report generate hone tak:
+
+Part 1: Parsing & Pre-Analysis (Data Tayari)
+Jab tum command chalate ho (python main.py target_folder), sabse pehle Parser Pipeline chalu hoti hai. LLM ko pura raw code dena mehnga aur inefficient hai, isliye humara system pehle sirf security-relevant code extract karta hai.
+
+1. AST Parser (
+
+ast_parser.py
+)
+
+"Abstract Syntax Tree" — yeh code ko text ki tarah nahi, ek tree structure ki tarah read karta hai.
+Yeh nikalta hai: "Kaunse functions hain? Unke andar kya variables hain? Kaunsi classes hain? Kya imports use hue?"
+2. Symbol Table (
+
+symbol_table.py
+)
+
+AST se jo functions mile, unko ek dictionary mein store karta hai.
+Iska main kaam: Yeh detect karta hai ki kaunsa function ek Source hai (jahan se dangerous user input aata hai, e.g., request.body) aur kaunsa function ek Sink hai (dangerous operation jahan input execute hota hai, e.g., cursor.execute(), os.system()).
+3. Call Graph (
+
+call_graph.py
+) (CGF)
+
+Yeh samajhta hai ki "Kaun kisko call kar raha hai?"
+Agar Function A ne Function B ko call kiya, toh Call Graph unhe link kar deta hai. Yeh data flow trace karne ke liye bohot zaroori hai.
+4. Taint Analyzer (
+
+taint_analyzer.py
+) (The Game Changer)
+
+Yeh Call Graph aur Symbol Table ko mila kar check karta hai ki kya koi data Source se Sink tak ja raha hai.
+E.g., request.body (Source) -> handle_query() -> cursor.execute() (Sink).
+Agar beech mein koi Sanitizer nahi hai, toh yeh use Vulnerable Chain mark kar deta hai. Yeh sab bina LLM ke hota hai (100% accurate code logic).
+5. Smart Context Builder (
+
+context_builder.py
+)
+
+Ab iske paas sab info hai. Yeh pura code kaat-chaant kar sirf zaroori code (jisme Sources, Sinks, aur Taint Chains hain) extract karta hai.
+Isse code file 200,000 characters se ghat kar ~120,000 characters reh jati hai. LLM ko ab sirf kaam ki cheez milegi.
+Part 2: The 5-Phase Agent Pipeline (Orchestrator)
+Ab Orchestrator (orchestrator.py) active hota hai. Woh Smart Context ko lekar 5 alag-alag Agents ke paas jata hai, sequentially.
+
+Phase 1: Recon Agent (recon_agent.py)
+Kaam: Codebase ki "Kundali" nikalna.
+Yeh pehle Tools (Scanners) ko chalata hai.
+Semgrep: Code patterns dhundhta hai (e.g., weak passwords, bad imports).
+Bandit: Python-specific security checks.
+Trivy / npm_audit: Dekhte hain ki tumhari dependencies (libraries) mein toh purana CVE (vulnerability) nahi hai.
+Hardcoded Pattern Scanner: Humara custom scanner jo 111111 OTP ya git leaks jaisi cheezein directly regex se pakadta hai.
+Phir LLM ko bulata hai aur kehta hai: "Bhai, tools ne yeh 50 cheezein batayi hain, aur yeh raha code ka structure. Ek Threat Model banao (ki is app mein sabse bada khatra kahan hai)."
+Output: Tech stack, tools ke findings, aur Threat Model. (Yeh baaki agents ko pass hota hai).
+Phase 2: Vulnerability Agent (
+
+vulnerability_agent.py
+)
+Kaam: Asli vulnerabilities (SQLi, XSS, SSRF) find karna.
+Is agent ke paas 4 Unified Skills hain. Har skill LLM ko ek alag "chashma" (perspective) pehnati hai:
+Injection Engine: SQLi, Command Injection, XSS dekho.
+Auth Engine: Auth Bypass, JWT flaws, logic flaws dekho.
+Hardening Engine: Config issues, dependencies dekho.
+Framework Engine: Django/Express specific flaws dekho.
+LLM ko Smart Context (jisme pehle se Taint chains highlighted hain) aur skill prompt pass hota hai. LLM in Taint chains ko dekhta hai aur confirm karta hai ki haan, yeh SQL injection hai.
+Output: Raw Vulnerability Findings (ab tak inme False Positives ho sakte hain).
+Phase 3: Remediation Agent (
+
+remediation_agent.py
+)
+Kaam: Top 30 critical/high findings ke liye "Fix Code" likhna.
+Yeh dekhta hai ki SQL Injection kahan mila hai, aur LLM ko us function ka code bhej kar kehta hai: "Iska secure version (e.g., parameterized queries) likh kar do."
+Output: Findings ke andar remediation_code add ho jata hai.
+Phase 4: Verifier Agent (
+
+verifier_agent.py
+)
+Kaam: False Positives (galat findings) ko filter out karna (Double-check).
+Pehle (Fast Rule check): Bina LLM ke check karta hai. Agar scanner code ko hi vulnerability samajh liya string hone ke karan, ya Prisma ORM pe SQLi de diya, toh turant reject!
+Phir (LLM check): Bach gaye findings ko 50-50 ke batches mein LLM ke paas bhejta hai: "Bhai in 50 findings ko dhyaan se code ke saath mila kar dekh, kuch galat faimi toh nahi hui Phase 2 walay LLM se?"
+Output: Verified Findings (False positives marked).
+Phase 5: Report Validator Agent (
+
+report_validator_agent.py
+)
+Kaam: Final Polish aur Deduplication.
+Kabhi-kabhi Phase 1 ke tools (Semgrep/Bandit) aur Phase 2 (LLM) dono ne same SQL injection dhundh liya same line pe, bas title alag diya.
+Yeh agent LLM ko 50 ke batch mein sab kuch deta hai: "Duplicates merge kardey, grammar theek karde, aur agar severity galat hai CRITICAL ko MEDIUM kardey."
+Output: Bilkul saaf, non-duplicate, highly accurate list of vulnerabilities.
+Part 3: Report Generation
+Jab Orchestrator 5 phases complete kar leta hai, woh data wapas 
+
+main.py
+ me bhejta hai.
+
+report_generator.py saare Findings leta hai.
+Woh 3 files banata hai reports/ folder mein:
+.md
+ (Markdown - tumhare padhne ke liye)
+
+.json
+ (Structured data, UI ya APIs ke liye)
+.sarif (GitHub Security tab ya SonarQube mein daalne ke liye standard format).
+TL;DR (Chhota Tldr)
+Code Aata hai -> AST Parse (Functions nikalte hain) -> Symbol Table + Call Graph batate hain Source=X aur Sink=Y -> Taint Analyzer kehta hai "X se Y direct link hai" -> Smart Context LLM ko kachra hata kar sirf kaam ka code deta hai -> Recon (Tools chalata hai) -> Vuln (LLM AI se SQLi/XSS confirm karta hai) -> Remediation (Fixes likhta hai) -> Verifier (Galat findings hatata hai) -> Validator (Duplicates hatata hai) -> Report milti hai.
+
+Bilkul flawless, industry-grade pipeline! Samajh aaya bhai? Koi specific part deeply samjhna hai?
